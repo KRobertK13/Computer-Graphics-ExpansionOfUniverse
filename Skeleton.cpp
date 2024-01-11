@@ -35,22 +35,22 @@
 // Computer Graphics Sample Program: Ray-tracing-let
 //=============================================================================================
 #include "framework.h"
-
+ 
 struct FunctionValue {
 public:
 	float X, Y;
-
+ 
 	FunctionValue(float x, float y){
 		X = x;
 		Y = y;
 	}
 };
-
+ 
 class Hermit {
 	FunctionValue RFunc[4] = { FunctionValue(400, 0), FunctionValue(500, -0.2), FunctionValue(600, 2.5), FunctionValue(700, 0) };
 	FunctionValue GFunc[4] = { FunctionValue(400, 0), FunctionValue(450, -0.1), FunctionValue(550, 1.2), FunctionValue(700, 0) };
 	FunctionValue BFunc[3] = { FunctionValue(400, 0), FunctionValue(460, 1), FunctionValue(520, 0) };
-
+ 
 	float Calculate(float X, FunctionValue Func[], int length) {
 		int i;
 		for (int j = 0; j < length; j++) if (Func[j].X == X) return Func[j].Y;
@@ -59,40 +59,40 @@ class Hermit {
 		float a3 = (2 * (Func[i].Y - Func[i+1].Y)) / powf((Func[i + 1].X - Func[i].X), 3);
 		return a3 * powf((X - Func[i].X), 3) + a2 * powf((X - Func[i].X), 2) + Func[i].Y;
 	}
-
+ 
 public:
 	float GetRV(float X) {
 		return Calculate(X, RFunc, 4);
 	}
-
+ 
 	float GetGV(float X) {
 		return Calculate(X, GFunc, 4);
 	}
-
+ 
 	float GetBV(float X){
 		return Calculate(X, BFunc, 3);
 	}
-
+ 
 	float GetSV(float X, float v) {
 		FunctionValue SFunc[3] = { FunctionValue(150, 0), FunctionValue(450, 1000), FunctionValue(1600, 100) };
 		for (int i = 0; i < 3; i++) SFunc[i].X *= (1.0f + v /18.9f);
 		return Calculate(X, SFunc, 3);
 	}
-
+ 
 };
-
+ 
 struct Hit {
 	float t;
 	vec3 position;
 	vec3 color;
 	Hit() { t = -1; }
 };
-
+ 
 struct Ray {
 	vec3 start, dir;
 	Ray(vec3 _start, vec3 _dir) { start = _start; dir = normalize(_dir); }
 };
-
+ 
 struct Star {
 	float radius;
 	vec3 dir;
@@ -101,7 +101,7 @@ struct Star {
 	vec3 pt;
 	float v;
 	vec3 color;
-
+ 
 	void CalculateColor() {
 		float colors[3] = { 0,0,0 };
 		float sVal;
@@ -115,7 +115,7 @@ struct Star {
 		}
 		color = vec3(colors[0], colors[1], colors[2]);
 	}
-
+ 
 public:
 	Star(const vec3& p0, float _radius) {
 		radius = _radius;
@@ -128,13 +128,13 @@ public:
 	vec3 getColor() {
 		return color;
 	}
-
+ 
 	void normalizeColor(float v) {
 		color.x /= v;
 		color.y /= v;
 		color.z /= v;
 	}
-
+ 
 	Hit intersect(const Ray& ray) {
 		Hit hit;
 		vec3 dist = ray.start - pt;
@@ -152,7 +152,7 @@ public:
 		hit.color = color;
 		return hit;
 	}
-
+ 
 	void t(int T) {
 		time = T;
 		float Dt = D0 * powf(M_E, 0.1f * time);
@@ -161,7 +161,7 @@ public:
 		CalculateColor();
 	}
 };
-
+ 
 class Camera {
 	vec3 eye, lookat, right, up;
 public:
@@ -178,7 +178,7 @@ public:
 		return Ray(eye, dir);
 	}
 };
-
+ 
 class Scene {
 	std::vector<Star*> stars;
 	Camera camera;
@@ -209,7 +209,7 @@ class Scene {
 			stars[i]->normalizeColor(v / 5);
 		}
 	}
-
+ 
 public:
 	void build() {
 		vec3 eye = vec3(0, 0, -28.63625), vup = vec3(0, 1, 0), lookat = vec3(0, 0, 0);
@@ -223,7 +223,7 @@ public:
 			stars.push_back(new Star(vec3(x, y, i*dc+ dc2), 1));
 		}
 	}
-
+ 
 	void render(std::vector<vec4>& image) {
 		detectorSetup();
 		for (int Y = 0; Y < windowHeight; Y++) {
@@ -237,38 +237,38 @@ public:
 	void changeTime(int T) {
 		for ( int i = 0; i < 100; i++) stars[i]->t(T*2);
 	}
-
+ 
 };
-
+ 
 GPUProgram gpuProgram;
 Scene scene;
-
+ 
 const char* vertexSource = R"(
 	#version 330
     precision highp float;
-
+ 
 	layout(location = 0) in vec2 cVertexPosition;	// Attrib Array 0
 	out vec2 texcoord;
-
+ 
 	void main() {
 		texcoord = (cVertexPosition + vec2(1, 1))/2;							// -1,1 to 0,1
 		gl_Position = vec4(cVertexPosition.x, cVertexPosition.y, 0, 1); 		// transform to clipping space
 	}
 )";
-
+ 
 const char* fragmentSource = R"(
 	#version 330
     precision highp float;
-
+ 
 	uniform sampler2D textureUnit;
 	in  vec2 texcoord;			// interpolated texture coordinates
 	out vec4 fragmentColor;		// output that goes to the raster memory as told by glBindFragDataLocation
-
+ 
 	void main() {
 		fragmentColor = texture(textureUnit, texcoord); 
 	}
 )";
-
+ 
 class FullScreenTexturedQuad {
 	unsigned int vao;
 	Texture texture;
@@ -285,23 +285,23 @@ public:
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 	}
-
+ 
 	void Draw() {
 		glBindVertexArray(vao);
 		gpuProgram.setUniform(texture, "textureUnit");
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
 };
-
+ 
 FullScreenTexturedQuad* fullScreenTexturedQuad;
 bool painted = false;
-
+ 
 void onInitialization() {
 	glViewport(0, 0, windowWidth, windowHeight);
 	scene.build();
 	gpuProgram.create(vertexSource, fragmentSource, "fragmentColor");
 }
-
+ 
 void onDisplay() {
 	std::vector<vec4> image(windowWidth * windowHeight);
 	scene.render(image);
@@ -310,7 +310,7 @@ void onDisplay() {
 	fullScreenTexturedQuad->Draw();
 	glutSwapBuffers();
 }
-
+ 
 int toInt(char c) {
 	switch (c)
 	{
@@ -338,7 +338,7 @@ int toInt(char c) {
 		return -1;
 	}
 }
-
+ 
 // Key of ASCII code pressed
 void onKeyboard(unsigned char key, int pX, int pY) {
 	int k = toInt(key);
@@ -348,15 +348,15 @@ void onKeyboard(unsigned char key, int pX, int pY) {
 		glutPostRedisplay();
 	}
 }
-
+ 
 // Key of ASCII code released
 void onKeyboardUp(unsigned char key, int pX, int pY) {}
-
+ 
 // Mouse click event
 void onMouse(int button, int state, int pX, int pY) {}
-
+ 
 // Move mouse with key pressed
 void onMouseMotion(int pX, int pY) {}
-
+ 
 // Idle event indicating that some time elapsed: do animation here
 void onIdle() {}
